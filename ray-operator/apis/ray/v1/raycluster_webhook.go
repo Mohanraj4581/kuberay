@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"fmt"
 	"regexp"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -59,6 +60,10 @@ func (r *RayCluster) validateRayCluster() error {
 		allErrs = append(allErrs, err)
 	}
 
+	if err := r.ValidateRayClusterSpec(); err != nil {
+		allErrs = append(allErrs, err)
+	}
+
 	if len(allErrs) == 0 {
 		return nil
 	}
@@ -85,5 +90,70 @@ func (r *RayCluster) validateWorkerGroups() *field.Error {
 		workerGroupNames[workerGroup.GroupName] = true
 	}
 
+	return nil
+}
+
+func (r *RayCluster) ValidateRayClusterSpec() *field.Error {
+	if len(r.Spec.HeadGroupSpec.Template.Spec.Containers) == 0 {
+		return field.Invalid(
+			field.NewPath("spec").Child("headGroupSpec").Child("template").Child("spec").Child("containers"),
+			r.Spec.HeadGroupSpec.Template.Spec.Containers,
+			"headGroupSpec should have at least one container",
+		)
+	}
+
+	for i, workerGroup := range r.Spec.WorkerGroupSpecs {
+		if len(workerGroup.Template.Spec.Containers) == 0 {
+			return field.Invalid(
+				field.NewPath("spec").Child("workerGroupSpecs").Index(i),
+				workerGroup,
+				"workerGroupSpec should have at least one container",
+			)
+		}
+	}
+
+	if r.Annotations[RayFTEnabledAnnotationKey] != "" && r.Spec.GcsFaultToleranceOptions != nil {
+		return field.Invalid(
+			field.NewPath("metadata").Child("annotations").Child(RayFTEnabledAnnotationKey),
+			r.Annotations[RayFTEnabledAnnotationKey],
+			fmt.Sprintf("%s annotation and GcsFaultToleranceOptions are both set. "+
+				"Please use only GcsFaultToleranceOptions to configure GCS fault tolerance", RayFTEnabledAnnotationKey),
+		)
+	}
+
+	if !IsGCSFaultToleranceEnabled(*r) {
+		if EnvVarExists(RAY_REDIS_ADDRESS, r.Spec.HeadGroupSpec.Template.Spec.Containers[RayContainerIndex].Env) {
+			return field.Invalid(
+				field.NewPath("spec").Child("headGroupSpec").Child("template").Child("spec").Child("containers").Index(RayContainerIndex).Child("env"),
+				r.Spec.HeadGroupSpec.Template.Spec.Containers[RayContainerIndex].Env,
+				fmt.Sprintf("%s is set which implicitly enables GCS fault tolerance, "+
+					"but GcsFaultToleranceOptions is not set. Please set GcsFaultToleranceOptions "+
+					"to enable GCS fault tolerance", RAY_REDIS_ADDRESS),
+			)
+		}
+	}
+
+	if r.Spec.GcsFaultToleranceOptions != nil {
+		if redisPassword := r.Spec.HeadGroupSpec.RayStartParams["redis-password"]; redisPassword != "" {
+			return field.Invalid(
+				field.NewPath("spec").Child("headGroupSpec").Child("rayStartParams"),
+				r.Spec.HeadGroupSpec.RayStartParams,
+				"cannot set `redis-password` in rayStartParams when GcsFaultToleranceOptions is enabled - use GcsFaultToleranceOptions.RedisPassword instead",
+			)
+		}
+
+		headContainer := r.Spec.HeadGroupSpec.Template.Spec.Containers[RayContainerIndex]
+		if EnvVarExists(REDIS_PASSWORD, headContainer.Env) {
+			return field.Invalid(
+				field.NewPath("spec").Child("headGroupSpec").Child("template").Child("spec").Child("containers").Index(RayContainerIndex).Child("env"),
+				headContainer.Env,
+				"cannot set `REDIS_PASSWORD` env var in head Pod when GcsFaultToleranceOptions is enabled - use GcsFaultToleranceOptions.RedisPassword instead",
+			)
+		}
+	}
+
+	// TODO (kevin85421): If GcsFaultToleranceOptions is set, users should use `GcsFaultToleranceOptions.RedisAddress` instead of `RAY_REDIS_ADDRESS`.
+	// TODO (kevin85421): If GcsFaultToleranceOptions is set, users should use `GcsFaultToleranceOptions.ExternalStorageNamespace` instead of
+	// the annotation `ray.io/external-storage-namespace`.
 	return nil
 }
