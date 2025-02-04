@@ -80,6 +80,10 @@ test-sampleyaml: WHAT ?= ./test/sampleyaml
 test-sampleyaml: manifests fmt vet
 	go test -timeout 30m -v $(WHAT)
 
+test-e2erayjobsubmitter: WHAT ?= ./test/e2erayjobsubmitter
+test-e2erayjobsubmitter: fmt vet
+	go test -timeout 30m -v $(WHAT)
+
 sync: helm api-docs
 	./hack/update-codegen.sh
 
@@ -102,6 +106,9 @@ build: fmt vet ## Build manager binary.
 
 docker-image: ## Build image only
 	${ENGINE} build -t ${IMG} .
+
+docker-submitter-image: ## Build image only
+	${ENGINE} build -t ${IMG} --target submitter .
 
 docker-build: build docker-image ## Build image with the manager.
 
