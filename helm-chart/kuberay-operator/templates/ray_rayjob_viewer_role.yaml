@@ -1,4 +1,3 @@
-# permissions for end users to edit rayjobs.
 {{- if and .Values.rbacEnable (not .Values.singleNamespaceInstall) }}
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1

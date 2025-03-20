@@ -1,6 +1,5 @@
 ---
 # Source: kuberay-operator/templates/ray_raycluster_viewer_role.yaml
-# permissions for end users to view rayjobs.
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
