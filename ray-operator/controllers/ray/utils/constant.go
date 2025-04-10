@@ -143,6 +143,10 @@ const (
 	// If set to true, the RayJob CR itself will be deleted if shutdownAfterJobFinishes is set to true. Note that all resources created by the RayJob CR will be deleted, including the K8s Job.
 	DELETE_RAYJOB_CR_AFTER_JOB_FINISHES = "DELETE_RAYJOB_CR_AFTER_JOB_FINISHES"
 
+	// If this environment variable is set, its value will be injected into the PreStop hooks of the Ray
+	// containers in all Ray Pods—including both head and worker Pods.
+	PRE_STOP_COMMAND_LIST_JSON = "PRE_STOP_COMMAND_LIST_JSON"
+
 	// Ray core default configurations
 	DefaultWorkerRayGcsReconnectTimeoutS = "600"
 
