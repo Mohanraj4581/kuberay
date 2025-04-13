@@ -11,6 +11,7 @@ import (
 	"path"
 	"strings"
 	"sync/atomic"
+	"time"
 
 	assetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -144,7 +145,14 @@ func startHttpProxy() {
 	topMux.HandleFunc("/healthz", serveHealth)
 	serveSwaggerUI(topMux)
 
-	if err := http.ListenAndServe(*httpPortFlag, topMux); err != nil {
+	server := &http.Server{
+		Addr:         *httpPortFlag,
+		Handler:      topMux,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 5 * time.Second,
+	}
+
+	if err := server.ListenAndServe(); err != nil {
 		klog.Fatal(err)
 	}
 
