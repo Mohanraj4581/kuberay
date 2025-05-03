@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/ray-project/kuberay/ray-operator/controllers/ray/batchscheduler"
 	"os"
 	"strings"
 
@@ -242,13 +243,21 @@ func main() {
 	}
 
 	ctx := ctrl.SetupSignalHandler()
+	batchSchedulerMgr, err := batchscheduler.NewSchedulerManager(ctx, config, mgr.GetConfig())
+	if err != nil {
+		// fail fast if the scheduler plugin fails to init
+		// prevent running the controller in an undefined state
+		panic(err)
+	}
+	batchSchedulerMgr.AddToScheme(mgr.GetScheme())
+
 	rayClusterOptions := ray.RayClusterReconcilerOptions{
 		HeadSidecarContainers:     config.HeadSidecarContainers,
 		WorkerSidecarContainers:   config.WorkerSidecarContainers,
 		IsOpenShift:               utils.GetClusterType(),
 		RayClusterMetricCollector: rayClusterMetricCollector,
 	}
-	exitOnError(ray.NewReconciler(ctx, mgr, rayClusterOptions, config).SetupWithManager(mgr, config.ReconcileConcurrency),
+	exitOnError(ray.NewReconciler(ctx, mgr, batchSchedulerMgr, rayClusterOptions, config).SetupWithManager(mgr, config.ReconcileConcurrency),
 		"unable to create controller", "controller", "RayCluster")
 	exitOnError(ray.NewRayServiceReconciler(ctx, mgr, config).SetupWithManager(mgr, config.ReconcileConcurrency),
 		"unable to create controller", "controller", "RayService")
@@ -256,7 +265,7 @@ func main() {
 	rayJobOptions := ray.RayJobReconcilerOptions{
 		RayJobMetricsManager: rayJobMetricsManager,
 	}
-	exitOnError(ray.NewRayJobReconciler(ctx, mgr, rayJobOptions, config).SetupWithManager(mgr, config.ReconcileConcurrency),
+	exitOnError(ray.NewRayJobReconciler(ctx, mgr, batchSchedulerMgr, rayJobOptions, config).SetupWithManager(mgr, config.ReconcileConcurrency),
 		"unable to create controller", "controller", "RayJob")
 
 	if os.Getenv("ENABLE_WEBHOOKS") == "true" {
