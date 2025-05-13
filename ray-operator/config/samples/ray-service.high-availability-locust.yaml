@@ -58,10 +58,6 @@ spec:
       minReplicas: 0
       maxReplicas: 5
       groupName: worker
-      # The `rayStartParams` are used to configure the `ray start` command.
-      # See https://github.com/ray-project/kuberay/blob/master/docs/guidance/rayStartParams.md for the default settings of `rayStartParams` in KubeRay.
-      # See https://docs.ray.io/en/latest/cluster/cli.html#ray-start for all available options in `rayStartParams`.
-      rayStartParams: {}
       #pod template
       template:
         spec:
@@ -83,7 +79,6 @@ metadata:
 spec:
   rayVersion: '2.46.0'
   headGroupSpec:
-    rayStartParams: {}
     template:
       spec:
         containers:
