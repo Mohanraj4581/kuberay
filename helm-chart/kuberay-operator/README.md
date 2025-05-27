@@ -1,6 +1,6 @@
 # kuberay-operator
 
-![Version: 1.1.0](https://img.shields.io/badge/Version-1.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.4.0](https://img.shields.io/badge/Version-1.4.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A Helm chart for deploying the Kuberay operator on Kubernetes.
 
@@ -148,7 +148,7 @@ spec:
 | fullnameOverride | string | `"kuberay-operator"` | String to fully override release name. |
 | componentOverride | string | `"kuberay-operator"` | String to override component name. |
 | image.repository | string | `"quay.io/kuberay/operator"` | Image repository. |
-| image.tag | string | `"nightly"` | Image tag. |
+| image.tag | string | `"1.4.0"` | Image tag. |
 | image.pullPolicy | string | `"IfNotPresent"` | Image pull policy. |
 | labels | object | `{}` | Extra labels. |
 | annotations | object | `{}` | Extra annotations. |
