@@ -124,8 +124,8 @@ func GetK8sJobCommand(rayJobInstance *rayv1.RayJob) ([]string, error) {
 }
 
 // GetDefaultSubmitterTemplate creates a default submitter template for the Ray job.
-func GetDefaultSubmitterTemplate(rayClusterInstance *rayv1.RayCluster) corev1.PodTemplateSpec {
-	return corev1.PodTemplateSpec{
+func GetDefaultSubmitterTemplate(rayClusterInstance *rayv1.RayCluster, rayJob *rayv1.RayJob) corev1.PodTemplateSpec {
+	pod := corev1.PodTemplateSpec{
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
 				{
@@ -147,4 +147,13 @@ func GetDefaultSubmitterTemplate(rayClusterInstance *rayv1.RayCluster) corev1.Po
 			RestartPolicy: corev1.RestartPolicyNever,
 		},
 	}
+	if rayJob != nil && rayJob.Spec.SubmitterConfig != nil && rayJob.Spec.SubmitterConfig.Resources != nil {
+		if rayJob.Spec.SubmitterConfig.Resources.Requests != nil {
+			pod.Spec.Containers[0].Resources.Requests = *rayJob.Spec.SubmitterConfig.Resources.Requests
+		}
+		if rayJob.Spec.SubmitterConfig.Resources.Limits != nil {
+			pod.Spec.Containers[0].Resources.Limits = *rayJob.Spec.SubmitterConfig.Resources.Limits
+		}
+	}
+	return pod
 }
