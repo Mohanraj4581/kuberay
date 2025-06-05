@@ -8,7 +8,6 @@ metadata:
 spec:
   rayVersion: '2.46.0'
   headGroupSpec:
-    rayStartParams: {}
     template:
       spec:
         containers:
@@ -47,8 +46,7 @@ spec:
           - containerPort: 8081
             name: mxla
   workerGroupSpecs:
-  - rayStartParams: {}
-    replicas: 1
+  - replicas: 1
     minReplicas: 1
     maxReplicas: 1
     numOfHosts: 2
