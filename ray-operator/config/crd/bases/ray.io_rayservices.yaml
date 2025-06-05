@@ -40,6 +40,10 @@ spec:
                 type: integer
               excludeHeadPodFromServeSvc:
                 type: boolean
+              gateway:
+                type: string
+              httpRoute:
+                type: string
               rayClusterConfig:
                 properties:
                   autoscalerOptions:
@@ -8221,6 +8225,25 @@ spec:
                 type: integer
               upgradeStrategy:
                 properties:
+                  incrementalUpgradeOptions:
+                    properties:
+                      gatewayClassName:
+                        type: string
+                      intervalSeconds:
+                        format: int32
+                        type: integer
+                      maxSurgePercent:
+                        default: 100
+                        format: int32
+                        type: integer
+                      stepSizePercent:
+                        format: int32
+                        type: integer
+                    required:
+                    - gatewayClassName
+                    - intervalSeconds
+                    - stepSizePercent
+                    type: object
                   type:
                     type: string
                 type: object
@@ -8249,6 +8272,9 @@ spec:
                           type: string
                       type: object
                     type: object
+                  lastTrafficMigratedTime:
+                    format: date-time
+                    type: string
                   rayClusterName:
                     type: string
                   rayClusterStatus:
@@ -8363,6 +8389,12 @@ spec:
                           type: string
                         type: object
                     type: object
+                  targetCapacity:
+                    format: int32
+                    type: integer
+                  trafficRoutedPercent:
+                    format: int32
+                    type: integer
                 type: object
               conditions:
                 items:
@@ -8432,6 +8464,9 @@ spec:
                           type: string
                       type: object
                     type: object
+                  lastTrafficMigratedTime:
+                    format: date-time
+                    type: string
                   rayClusterName:
                     type: string
                   rayClusterStatus:
@@ -8546,6 +8581,12 @@ spec:
                           type: string
                         type: object
                     type: object
+                  targetCapacity:
+                    format: int32
+                    type: integer
+                  trafficRoutedPercent:
+                    format: int32
+                    type: integer
                 type: object
               serviceStatus:
                 type: string
